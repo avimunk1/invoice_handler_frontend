@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Support for RTL (Hebrew) text */
+[dir="rtl"] {
+  direction: rtl;
+}
+
+/* Custom styles for editable cells */
+.editable-cell {
+  @apply border border-gray-300 px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
