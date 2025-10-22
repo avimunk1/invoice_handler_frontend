@@ -47,12 +47,22 @@ export async function uploadToS3(
 }
 
 /**
- * Process invoices from S3 or local paths
+ * Process invoices from S3 or local paths (Azure invoice model)
  */
 export async function processInvoices(
   request: ProcessRequest
 ): Promise<ProcessResponse> {
   const response = await apiClient.post<ProcessResponse>('/process', request);
+  return response.data;
+}
+
+/**
+ * Process invoices using LLM approach (Azure OCR + OpenAI)
+ */
+export async function processInvoicesWithLLM(
+  request: ProcessRequest
+): Promise<ProcessResponse> {
+  const response = await apiClient.post<ProcessResponse>('/process/llm', request);
   return response.data;
 }
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import FileUpload from './components/FileUpload';
 import ResultsTable from './components/ResultsTable';
 import { uploadFilesToS3, type UploadProgress } from './services/s3Upload';
-import { processInvoices } from './api/client';
+import { processInvoices, processInvoicesWithLLM } from './api/client';
 import type { InvoiceData } from './types/invoice';
 
 function App() {
@@ -10,6 +10,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
+  const [useLLM, setUseLLM] = useState(true); // Default to LLM approach
 
   const handleFilesSelected = async (files: FileList | null, localPath?: string) => {
     setError(null);
@@ -37,12 +38,18 @@ function App() {
         throw new Error('No files or path provided');
       }
 
-      // Process the folder/bucket
-      const response = await processInvoices({
-        path: pathToProcess,
-        recursive: false,
-        language_detection: true,
-      });
+      // Process the folder/bucket with selected method
+      const response = useLLM 
+        ? await processInvoicesWithLLM({
+            path: pathToProcess,
+            recursive: false,
+            language_detection: true,
+          })
+        : await processInvoices({
+            path: pathToProcess,
+            recursive: false,
+            language_detection: true,
+          });
 
       setResults(response.results);
 
@@ -73,6 +80,33 @@ function App() {
           <h1 className="text-4xl font-bold text-gray-900">Invoice Handler</h1>
           <p className="text-gray-600 mt-2">Upload and process invoices with AI</p>
         </header>
+
+        {/* Processing Method Toggle */}
+        <div className="mb-6 bg-white rounded-lg shadow-sm p-4 max-w-2xl mx-auto">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Processing Method</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                {useLLM 
+                  ? '🤖 LLM Mode: More flexible, better for receipts and Hebrew text'
+                  : '⚡ Azure Mode: Faster, structured invoice extraction'}
+              </p>
+            </div>
+            <button
+              onClick={() => setUseLLM(!useLLM)}
+              className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                useLLM ? 'bg-blue-600' : 'bg-gray-300'
+              }`}
+              disabled={loading}
+            >
+              <span
+                className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                  useLLM ? 'translate-x-9' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
 
         <FileUpload
           onFilesSelected={handleFilesSelected}

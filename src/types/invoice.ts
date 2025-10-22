@@ -8,6 +8,7 @@ export interface LineItem {
 export interface InvoiceData {
   file_name: string;
   source_path: string;
+  file_url?: string;  // URL to view/download the file
   language: string;  // "en" or "he"
   document_type: string;  // "invoice", "receipt", "other", or "uncertain"
   supplier_name?: string;
