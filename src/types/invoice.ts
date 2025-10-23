@@ -1,3 +1,8 @@
+export interface BoundingBox {
+  polygon: number[][];  // [[x1,y1], [x2,y2], [x3,y3], [x4,y4]] normalized coordinates (0-1)
+  page_number: number;
+}
+
 export interface LineItem {
   description: string;
   quantity?: number;
@@ -20,17 +25,22 @@ export interface InvoiceData {
   total?: number;
   line_items?: LineItem[];
   confidence?: number;
+  bounding_boxes?: Record<string, BoundingBox>;  // Field name -> bounding box
+  page_count?: number;  // Total number of pages in document
 }
 
 export interface ProcessRequest {
   path: string;
   recursive: boolean;
   language_detection: boolean;
+  starting_point?: number;  // Index to start processing from (0-based)
 }
 
 export interface ProcessResponse {
   results: InvoiceData[];
   errors: string[];
+  total_files: number;       // Total number of files discovered
+  files_handled: number;     // Number of files processed in this batch
 }
 
 export interface PresignedUrlResponse {
