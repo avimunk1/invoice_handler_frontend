@@ -53,6 +53,7 @@ interface DocumentPreviewProps {
   boundingBoxes?: Record<string, BoundingBox>;
   selectedField?: string | null;
   onFieldClick?: (field: string) => void;
+  fieldConfidence?: Record<string, number>;
 }
 
 // Field color mapping for bounding boxes
@@ -76,6 +77,20 @@ const FIELD_LABELS: Record<string, string> = {
   total: 'Total',
 };
 
+// Helper function to get confidence level and color
+function getConfidenceLevel(confidence?: number): { level: 'high' | 'medium' | 'low' | 'none'; color: string; bgColor: string; borderColor: string } {
+  if (confidence === undefined || confidence === null) {
+    return { level: 'none', color: 'text-gray-500', bgColor: 'bg-gray-100', borderColor: '#9ca3af' };
+  }
+  if (confidence >= 0.9) {
+    return { level: 'high', color: 'text-green-700', bgColor: 'bg-green-100', borderColor: '#22c55e' };
+  }
+  if (confidence >= 0.7) {
+    return { level: 'medium', color: 'text-yellow-700', bgColor: 'bg-yellow-100', borderColor: '#f59e0b' };
+  }
+  return { level: 'low', color: 'text-red-700', bgColor: 'bg-red-100', borderColor: '#ef4444' };
+}
+
 function BoundingBoxOverlay({
   boundingBoxes,
   currentPage,
@@ -83,6 +98,7 @@ function BoundingBoxOverlay({
   pageHeight,
   scale,
   selectedField,
+  fieldConfidence,
 }: {
   boundingBoxes?: Record<string, BoundingBox>;
   currentPage: number;
@@ -90,6 +106,7 @@ function BoundingBoxOverlay({
   pageHeight: number;
   scale: number;
   selectedField?: string | null;
+  fieldConfidence?: Record<string, number>;
 }) {
   if (!boundingBoxes || !pageWidth || !pageHeight) {
     return null;
@@ -119,7 +136,10 @@ function BoundingBoxOverlay({
           return null;
         }
 
-        const color = FIELD_COLORS[fieldName] || '#6b7280';
+        // Use confidence-based color if available, otherwise use field-specific color
+        const confidence = fieldConfidence?.[fieldName];
+        const confidenceInfo = getConfidenceLevel(confidence);
+        const color = confidence !== undefined ? confidenceInfo.borderColor : (FIELD_COLORS[fieldName] || '#6b7280');
         const isSelected = selectedField === fieldName;
         const points = transformCoordinates(bbox.polygon);
 
@@ -151,7 +171,7 @@ function BoundingBoxOverlay({
   );
 }
 
-function DocumentPreview({ fileUrl, fileName, boundingBoxes, selectedField, onFieldClick }: DocumentPreviewProps) {
+function DocumentPreview({ fileUrl, fileName, boundingBoxes, selectedField, onFieldClick, fieldConfidence }: DocumentPreviewProps) {
   const [actualUrl, setActualUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -362,6 +382,7 @@ function DocumentPreview({ fileUrl, fileName, boundingBoxes, selectedField, onFi
                   pageHeight={pageHeight}
                   scale={scale}
                   selectedField={selectedField}
+                  fieldConfidence={fieldConfidence}
                 />
               </div>
             </div>
@@ -457,24 +478,36 @@ export default function GridView({ results, onUpdate }: GridViewProps) {
     const isEditing = editingCell?.index === index && editingCell?.field === field;
     const isHebrew = results[index].language === 'he';
     const isSelected = selectedFields[index] === field;
+    const confidence = results[index].field_confidence?.[field];
+    const confidenceInfo = getConfidenceLevel(confidence);
     
     return (
       <div className="mb-3">
         <label className="block text-xs font-medium text-gray-500 mb-1 flex items-center justify-between">
           <span>{label}</span>
-          {hasBox && (
-            <button
-              onClick={() => handleFieldHighlight(index, field)}
-              className={`text-xs px-2 py-0.5 rounded transition-colors ${
-                isSelected
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-              }`}
-              title="Highlight on document"
-            >
-              👁
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {confidence !== undefined && (
+              <span 
+                className={`text-xs px-2 py-0.5 rounded ${confidenceInfo.bgColor} ${confidenceInfo.color} font-medium`}
+                title={`Confidence: ${(confidence * 100).toFixed(1)}%`}
+              >
+                {(confidence * 100).toFixed(0)}%
+              </span>
+            )}
+            {hasBox && (
+              <button
+                onClick={() => handleFieldHighlight(index, field)}
+                className={`text-xs px-2 py-0.5 rounded transition-colors ${
+                  isSelected
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                }`}
+                title="Highlight on document"
+              >
+                👁
+              </button>
+            )}
+          </div>
         </label>
         {isEditing ? (
           <input
@@ -499,6 +532,9 @@ export default function GridView({ results, onUpdate }: GridViewProps) {
             {value ?? '-'}
           </div>
         )}
+        {confidence !== undefined && confidence < 0.7 && (
+          <p className="text-xs text-red-600 mt-1">⚠️ Low confidence - please verify</p>
+        )}
       </div>
     );
   };
@@ -509,6 +545,23 @@ export default function GridView({ results, onUpdate }: GridViewProps) {
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Processing Results</h2>
           <p className="text-sm text-gray-600 mt-1">Click on any field to edit • Click 👁 to highlight on document</p>
+          
+          {/* Confidence Legend */}
+          <div className="flex items-center gap-4 mt-3 text-xs">
+            <span className="font-medium text-gray-600">Confidence:</span>
+            <div className="flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded bg-green-100 text-green-700 font-medium">≥90%</span>
+              <span className="text-gray-500">High</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded bg-yellow-100 text-yellow-700 font-medium">70-89%</span>
+              <span className="text-gray-500">Medium</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded bg-red-100 text-red-700 font-medium">&lt;70%</span>
+              <span className="text-gray-500">Low</span>
+            </div>
+          </div>
         </div>
         <div className="text-sm text-gray-600">
           {results.length} document{results.length !== 1 ? 's' : ''}
@@ -730,6 +783,7 @@ export default function GridView({ results, onUpdate }: GridViewProps) {
                     boundingBoxes={boundingBoxes}
                     selectedField={selectedFields[idx]}
                     onFieldClick={(field) => handleFieldHighlight(idx, field)}
+                    fieldConfidence={invoice.field_confidence}
                   />
                 ) : (
                   <div className="text-gray-400 text-center">

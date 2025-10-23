@@ -7,6 +7,14 @@ interface ResultsTableProps {
   onUpdate: (index: number, field: keyof InvoiceData, value: any) => void;
 }
 
+// Helper function to get confidence background color
+function getConfidenceBgColor(confidence?: number): string {
+  if (confidence === undefined || confidence === null) return '';
+  if (confidence >= 0.9) return 'bg-green-50';
+  if (confidence >= 0.7) return 'bg-yellow-50';
+  return 'bg-red-50';
+}
+
 export default function ResultsTable({ results, onUpdate }: ResultsTableProps) {
   const [editingCell, setEditingCell] = useState<{ row: number; field: keyof InvoiceData } | null>(null);
   const [viewingDoc, setViewingDoc] = useState<{ url: string; name: string } | null>(null);
@@ -34,6 +42,8 @@ export default function ResultsTable({ results, onUpdate }: ResultsTableProps) {
   const renderCell = (row: number, field: keyof InvoiceData, value: any) => {
     const isEditing = editingCell?.row === row && editingCell?.field === field;
     const isHebrew = results[row].language === 'he';
+    const confidence = results[row].field_confidence?.[field];
+    const bgColor = getConfidenceBgColor(confidence);
     
     if (isEditing) {
       return (
@@ -56,8 +66,9 @@ export default function ResultsTable({ results, onUpdate }: ResultsTableProps) {
     return (
       <div
         onClick={() => handleCellClick(row, field)}
-        className="cursor-pointer px-2 py-1 hover:bg-gray-100 rounded min-h-[2rem]"
+        className={`cursor-pointer px-2 py-1 hover:bg-gray-100 rounded min-h-[2rem] ${bgColor}`}
         dir={isHebrew ? 'rtl' : 'ltr'}
+        title={confidence !== undefined ? `Confidence: ${(confidence * 100).toFixed(1)}%` : undefined}
       >
         {value ?? '-'}
       </div>
@@ -67,8 +78,29 @@ export default function ResultsTable({ results, onUpdate }: ResultsTableProps) {
   return (
     <>
       <div className="w-full mt-8 p-6 bg-white rounded-lg shadow-md overflow-x-auto">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">Processing Results</h2>
-        <p className="text-sm text-gray-600 mb-4">Click on any cell to edit</p>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">Processing Results</h2>
+            <p className="text-sm text-gray-600 mt-1">Click on any cell to edit • Hover over cells to see confidence</p>
+            
+            {/* Confidence Legend */}
+            <div className="flex items-center gap-4 mt-3 text-xs">
+              <span className="font-medium text-gray-600">Cell Colors:</span>
+              <div className="flex items-center gap-1">
+                <div className="w-12 h-4 bg-green-50 border border-green-200 rounded"></div>
+                <span className="text-gray-500">≥90%</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-12 h-4 bg-yellow-50 border border-yellow-200 rounded"></div>
+                <span className="text-gray-500">70-89%</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-12 h-4 bg-red-50 border border-red-200 rounded"></div>
+                <span className="text-gray-500">&lt;70%</span>
+              </div>
+            </div>
+          </div>
+        </div>
         
         <div className="overflow-x-auto">
           <table className="w-full divide-y divide-gray-200 text-sm">

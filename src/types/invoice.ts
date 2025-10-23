@@ -27,6 +27,7 @@ export interface InvoiceData {
   confidence?: number;
   bounding_boxes?: Record<string, BoundingBox>;  // Field name -> bounding box
   page_count?: number;  // Total number of pages in document
+  field_confidence?: Record<string, number>;  // Field name -> confidence score (0-1)
 }
 
 export interface ProcessRequest {
