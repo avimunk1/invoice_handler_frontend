@@ -3,7 +3,7 @@ import FileUpload from './components/FileUpload';
 import ResultsTable from './components/ResultsTable';
 import GridView from './components/GridView';
 import { uploadFilesToS3, type UploadProgress } from './services/s3Upload';
-import { processInvoices, processInvoicesWithLLM } from './api/client';
+import { processInvoicesWithLLM } from './api/client';
 import type { InvoiceData } from './types/invoice';
 
 type ViewMode = 'list' | 'grid';
@@ -13,9 +13,9 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
-  const [useLLM, setUseLLM] = useState(true); // Default to LLM approach
   const [processingProgress, setProcessingProgress] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('list'); // Default to list view
+  const [vatRate, setVatRate] = useState<number>(0.18);
 
   const handleFilesSelected = async (files: FileList | null, localPath?: string) => {
     setError(null);
@@ -60,19 +60,12 @@ function App() {
           setProcessingProgress('Discovering files...');
         }
 
-        const response = useLLM 
-          ? await processInvoicesWithLLM({
-              path: pathToProcess,
-              recursive: false,
-              language_detection: true,
-              starting_point: startingPoint,
-            })
-          : await processInvoices({
-              path: pathToProcess,
-              recursive: false,
-              language_detection: true,
-              starting_point: startingPoint,
-            });
+        const response = await processInvoicesWithLLM({
+          path: pathToProcess,
+          recursive: false,
+          language_detection: true,
+          starting_point: startingPoint,
+        });
 
         // Update total files count on first iteration
         if (totalFiles === 0) {
@@ -82,6 +75,9 @@ function App() {
         // Append results from this batch
         allResults.push(...response.results);
         setResults([...allResults]); // Update UI with accumulated results
+        if (response.vat_rate !== undefined && response.vat_rate !== null) {
+          setVatRate(response.vat_rate);
+        }
         
         // Collect errors
         if (response.errors.length > 0) {
@@ -110,12 +106,36 @@ function App() {
     }
   };
 
+  const round2 = (n: number | undefined) => (typeof n === 'number' && isFinite(n) ? Math.round(n * 100) / 100 : undefined);
+
   const handleUpdateResult = (index: number, field: keyof InvoiceData, value: any) => {
-    setResults((prev) =>
-      prev.map((item, idx) =>
-        idx === index ? { ...item, [field]: value } : item
-      )
-    );
+    setResults((prev) => {
+      const updated = prev.map((item, idx) => (idx === index ? { ...item } : item));
+      const inv = updated[index];
+      (inv as any)[field] = typeof value === 'number' ? value : (value !== undefined ? value : undefined);
+
+      
+
+      // Recalc logic based on which field changed
+      if (field === 'subtotal') {
+        if (typeof inv.subtotal === 'number') {
+          inv.tax_amount = round2(inv.subtotal * vatRate);
+          inv.total = round2(inv.subtotal + (inv.tax_amount ?? 0));
+        }
+      } else if (field === 'tax_amount') {
+        if (typeof inv.tax_amount === 'number') {
+          inv.subtotal = round2(inv.tax_amount / vatRate);
+          inv.total = round2((inv.subtotal ?? 0) + inv.tax_amount);
+        }
+      } else if (field === 'total') {
+        if (typeof inv.total === 'number') {
+          inv.subtotal = round2(inv.total / (1 + vatRate));
+          inv.tax_amount = round2((inv.subtotal ?? 0) * vatRate);
+        }
+      }
+
+      return updated;
+    });
   };
 
   return (
@@ -126,59 +146,7 @@ function App() {
           <p className="text-gray-600 mt-2">Upload and process invoices with AI</p>
         </header>
 
-        {/* Processing Method & View Mode Toggles */}
-        <div className="mb-6 bg-white rounded-lg shadow-sm p-4 max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Processing Method Toggle */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Processing Method</h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  {useLLM 
-                    ? '🤖 LLM Mode: Smart extraction + bounding boxes'
-                    : '⚡ Azure Mode: Fast extraction + bounding boxes'}
-                </p>
-              </div>
-              <button
-                onClick={() => setUseLLM(!useLLM)}
-                className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                  useLLM ? 'bg-blue-600' : 'bg-gray-300'
-                }`}
-                disabled={loading}
-              >
-                <span
-                  className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
-                    useLLM ? 'translate-x-9' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-            </div>
-
-            {/* View Mode Toggle */}
-            <div className="flex items-center justify-between border-l border-gray-200 pl-6">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">View Mode</h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  {viewMode === 'list'
-                    ? '📋 List View: Compact table'
-                    : '🎴 Grid View: Detailed cards'}
-                </p>
-              </div>
-              <button
-                onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
-                className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
-                  viewMode === 'grid' ? 'bg-green-600' : 'bg-gray-300'
-                }`}
-              >
-                <span
-                  className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
-                    viewMode === 'grid' ? 'translate-x-9' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-            </div>
-          </div>
-        </div>
+        {/* View toggles moved into results bars */}
 
         <FileUpload
           onFilesSelected={handleFilesSelected}
@@ -209,9 +177,9 @@ function App() {
 
         {results.length > 0 && (
           viewMode === 'list' ? (
-            <ResultsTable results={results} onUpdate={handleUpdateResult} />
+            <ResultsTable results={results} onUpdate={handleUpdateResult} viewMode={viewMode} onChangeView={setViewMode} />
           ) : (
-            <GridView results={results} onUpdate={handleUpdateResult} />
+            <GridView results={results} onUpdate={handleUpdateResult} viewMode={viewMode} onChangeView={setViewMode} />
           )
         )}
       </div>

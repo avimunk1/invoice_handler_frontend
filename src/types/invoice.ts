@@ -42,6 +42,7 @@ export interface ProcessResponse {
   errors: string[];
   total_files: number;       // Total number of files discovered
   files_handled: number;     // Number of files processed in this batch
+  vat_rate?: number;
 }
 
 export interface PresignedUrlResponse {

@@ -5,6 +5,8 @@ import DocumentViewer from './DocumentViewer';
 interface ResultsTableProps {
   results: InvoiceData[];
   onUpdate: (index: number, field: keyof InvoiceData, value: any) => void;
+  viewMode?: 'list' | 'grid';
+  onChangeView?: (mode: 'list' | 'grid') => void;
 }
 
 // Helper function to get confidence background color
@@ -15,7 +17,7 @@ function getConfidenceBgColor(confidence?: number): string {
   return 'bg-red-50';
 }
 
-export default function ResultsTable({ results, onUpdate }: ResultsTableProps) {
+export default function ResultsTable({ results, onUpdate, viewMode = 'list', onChangeView }: ResultsTableProps) {
   const [editingCell, setEditingCell] = useState<{ row: number; field: keyof InvoiceData } | null>(null);
   const [viewingDoc, setViewingDoc] = useState<{ url: string; name: string } | null>(null);
 
@@ -82,7 +84,6 @@ export default function ResultsTable({ results, onUpdate }: ResultsTableProps) {
           <div>
             <h2 className="text-2xl font-bold text-gray-800">Processing Results</h2>
             <p className="text-sm text-gray-600 mt-1">Click on any cell to edit • Hover over cells to see confidence</p>
-            
             {/* Confidence Legend */}
             <div className="flex items-center gap-4 mt-3 text-xs">
               <span className="font-medium text-gray-600">Cell Colors:</span>
@@ -100,6 +101,25 @@ export default function ResultsTable({ results, onUpdate }: ResultsTableProps) {
               </div>
             </div>
           </div>
+          {/* View mode icons */}
+          {onChangeView && (
+            <div className="flex items-center gap-2 text-gray-500">
+              <button
+                className={`p-2 rounded ${viewMode === 'list' ? 'bg-gray-200 text-gray-900' : 'hover:bg-gray-100'}`}
+                title="List view"
+                onClick={() => onChangeView('list')}
+              >
+                📋
+              </button>
+              <button
+                className={`p-2 rounded ${viewMode === 'grid' ? 'bg-gray-200 text-gray-900' : 'hover:bg-gray-100'}`}
+                title="Grid view"
+                onClick={() => onChangeView('grid')}
+              >
+                🎴
+              </button>
+            </div>
+          )}
         </div>
         
         <div className="overflow-x-auto">

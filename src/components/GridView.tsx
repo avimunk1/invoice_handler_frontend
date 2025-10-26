@@ -45,6 +45,8 @@ class PDFErrorBoundary extends Component<
 interface GridViewProps {
   results: InvoiceData[];
   onUpdate: (index: number, field: keyof InvoiceData, value: any) => void;
+  viewMode?: 'list' | 'grid';
+  onChangeView?: (mode: 'list' | 'grid') => void;
 }
 
 interface DocumentPreviewProps {
@@ -443,7 +445,7 @@ function DocumentPreview({ fileUrl, fileName, boundingBoxes, selectedField, onFi
   );
 }
 
-export default function GridView({ results, onUpdate }: GridViewProps) {
+export default function GridView({ results, onUpdate, viewMode = 'grid', onChangeView }: GridViewProps) {
   const [editingCell, setEditingCell] = useState<{ index: number; field: keyof InvoiceData } | null>(null);
   const [selectedFields, setSelectedFields] = useState<Record<number, string | null>>({});
 
@@ -563,7 +565,25 @@ export default function GridView({ results, onUpdate }: GridViewProps) {
             </div>
           </div>
         </div>
-        <div className="text-sm text-gray-600">
+        <div className="flex items-center gap-3 text-sm text-gray-600">
+          {onChangeView && (
+            <div className="flex items-center gap-1 mr-2">
+              <button
+                className={`p-2 rounded ${viewMode === 'list' ? 'bg-gray-200 text-gray-900' : 'hover:bg-gray-100'}`}
+                title="List view"
+                onClick={() => onChangeView('list')}
+              >
+                📋
+              </button>
+              <button
+                className={`p-2 rounded ${viewMode === 'grid' ? 'bg-gray-200 text-gray-900' : 'hover:bg-gray-100'}`}
+                title="Grid view"
+                onClick={() => onChangeView('grid')}
+              >
+                🎴
+              </button>
+            </div>
+          )}
           {results.length} document{results.length !== 1 ? 's' : ''}
         </div>
       </div>
