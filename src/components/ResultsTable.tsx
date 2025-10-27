@@ -48,6 +48,22 @@ export default function ResultsTable({ results, onUpdate, viewMode = 'list', onC
     const bgColor = getConfidenceBgColor(confidence);
     
     if (isEditing) {
+      if (field === 'status') {
+        return (
+          <select
+            autoFocus
+            defaultValue={value ?? 'pending'}
+            onBlur={(e) => handleCellBlur(row, field, e.target.value)}
+            onChange={(e) => handleCellBlur(row, field, e.target.value)}
+            className="w-full px-2 py-1 border border-blue-500 rounded focus:outline-none bg-white"
+          >
+            <option value="pending">pending</option>
+            <option value="approved">approved</option>
+            <option value="exported">exported</option>
+            <option value="rejected">rejected</option>
+          </select>
+        );
+      }
       return (
         <input
           type="text"
@@ -131,8 +147,12 @@ export default function ResultsTable({ results, onUpdate, viewMode = 'list', onC
                 <th className="px-4 py-3 text-left font-medium text-gray-700 w-24">Type</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-700 w-20">Lang</th>
                 <th className="px-6 py-3 text-left font-medium text-gray-700 min-w-[250px]">Supplier</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-700 w-28">Supplier ID</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-700 w-36">Invoice #</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-700 w-28">Date</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-700 w-28">Due</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-700 w-32">Terms</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-700 w-28">Status</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-700 w-20">Currency</th>
                 <th className="px-4 py-3 text-right font-medium text-gray-700 w-28">Subtotal</th>
                 <th className="px-4 py-3 text-right font-medium text-gray-700 w-28">Tax</th>
@@ -184,15 +204,15 @@ export default function ResultsTable({ results, onUpdate, viewMode = 'list', onC
                     {invoice.language.toUpperCase()}
                   </span>
                 </td>
-                <td className="px-6 py-3">
-                  {renderCell(idx, 'supplier_name', invoice.supplier_name)}
-                </td>
+                <td className="px-6 py-3">{renderCell(idx, 'supplier_name', invoice.supplier_name)}</td>
+                <td className="px-4 py-3 text-gray-600">{(invoice as any).supplier_id ?? '-'}</td>
                 <td className="px-4 py-3">
                   {renderCell(idx, 'invoice_number', invoice.invoice_number)}
                 </td>
-                <td className="px-4 py-3">
-                  {renderCell(idx, 'invoice_date', invoice.invoice_date)}
-                </td>
+                <td className="px-4 py-3">{renderCell(idx, 'invoice_date', invoice.invoice_date)}</td>
+                <td className="px-4 py-3">{renderCell(idx, 'due_date', invoice.due_date)}</td>
+                <td className="px-4 py-3">{renderCell(idx, 'payment_terms', invoice.payment_terms)}</td>
+                <td className="px-4 py-3">{renderCell(idx, 'status', invoice.status ?? 'pending')}</td>
                 <td className="px-4 py-3">
                   {renderCell(idx, 'currency', invoice.currency)}
                 </td>

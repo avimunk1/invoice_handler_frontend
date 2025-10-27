@@ -47,6 +47,7 @@ interface GridViewProps {
   onUpdate: (index: number, field: keyof InvoiceData, value: any) => void;
   viewMode?: 'list' | 'grid';
   onChangeView?: (mode: 'list' | 'grid') => void;
+  onSaveSingle?: (index: number) => Promise<void>;
 }
 
 interface DocumentPreviewProps {
@@ -445,9 +446,11 @@ function DocumentPreview({ fileUrl, fileName, boundingBoxes, selectedField, onFi
   );
 }
 
-export default function GridView({ results, onUpdate, viewMode = 'grid', onChangeView }: GridViewProps) {
+export default function GridView({ results, onUpdate, viewMode = 'grid', onChangeView, onSaveSingle }: GridViewProps) {
   const [editingCell, setEditingCell] = useState<{ index: number; field: keyof InvoiceData } | null>(null);
   const [selectedFields, setSelectedFields] = useState<Record<number, string | null>>({});
+  const [savingIndex, setSavingIndex] = useState<number | null>(null);
+  const [saveResults, setSaveResults] = useState<Record<number, { success: boolean; message: string }>>({});
 
   if (results.length === 0) {
     return null;
@@ -474,6 +477,40 @@ export default function GridView({ results, onUpdate, viewMode = 'grid', onChang
       ...prev,
       [index]: prev[index] === field ? null : field,
     }));
+  };
+
+  const handleSaveDocument = async (index: number) => {
+    if (!onSaveSingle) return;
+    
+    setSavingIndex(index);
+    setSaveResults(prev => {
+      const newResults = { ...prev };
+      delete newResults[index];
+      return newResults;
+    });
+    
+    try {
+      await onSaveSingle(index);
+      setSaveResults(prev => ({
+        ...prev,
+        [index]: { success: true, message: 'Document saved successfully' }
+      }));
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSaveResults(prev => {
+          const newResults = { ...prev };
+          delete newResults[index];
+          return newResults;
+        });
+      }, 3000);
+    } catch (error) {
+      setSaveResults(prev => ({
+        ...prev,
+        [index]: { success: false, message: error instanceof Error ? error.message : 'Save failed' }
+      }));
+    } finally {
+      setSavingIndex(null);
+    }
   };
 
   const renderField = (index: number, field: keyof InvoiceData, label: string, value: any, hasBox: boolean = false) => {
@@ -512,19 +549,34 @@ export default function GridView({ results, onUpdate, viewMode = 'grid', onChang
           </div>
         </label>
         {isEditing ? (
-          <input
-            type="text"
-            defaultValue={value ?? ''}
-            autoFocus
-            onBlur={(e) => handleCellBlur(index, field, e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.currentTarget.blur();
-              }
-            }}
-            className="w-full px-3 py-2 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            dir={isHebrew ? 'rtl' : 'ltr'}
-          />
+          field === 'status' ? (
+            <select
+              autoFocus
+              defaultValue={value ?? 'pending'}
+              onBlur={(e) => handleCellBlur(index, field, e.target.value)}
+              onChange={(e) => handleCellBlur(index, field, e.target.value)}
+              className="w-full px-3 py-2 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              <option value="pending">pending</option>
+              <option value="approved">approved</option>
+              <option value="exported">exported</option>
+              <option value="rejected">rejected</option>
+            </select>
+          ) : (
+            <input
+              type="text"
+              defaultValue={value ?? ''}
+              autoFocus
+              onBlur={(e) => handleCellBlur(index, field, e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.currentTarget.blur();
+                }
+              }}
+              className="w-full px-3 py-2 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              dir={isHebrew ? 'rtl' : 'ltr'}
+            />
+          )
         ) : (
           <div
             onClick={() => handleCellClick(index, field)}
@@ -668,6 +720,39 @@ export default function GridView({ results, onUpdate, viewMode = 'grid', onChang
                       invoice.currency,
                       !!(boundingBoxes?.currency)
                     )}
+
+                    {/* Supplier ID (read-only) */}
+                    <div className="mb-3">
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Supplier ID</label>
+                      <div className="w-full px-3 py-2 bg-gray-100 rounded min-h-[2.5rem] flex items-center text-gray-600">
+                        {(invoice as any).supplier_id ?? '-'}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      {renderField(
+                        idx,
+                        'due_date',
+                        'Due Date',
+                        invoice.due_date,
+                        false
+                      )}
+                      {renderField(
+                        idx,
+                        'status',
+                        'Status',
+                        invoice.status ?? 'pending',
+                        false
+                      )}
+                    </div>
+
+                    {renderField(
+                      idx,
+                      'payment_terms',
+                      'Payment Terms',
+                      invoice.payment_terms,
+                      false
+                    )}
                     
                     <div className="grid grid-cols-3 gap-4">
                       <div>
@@ -791,6 +876,30 @@ export default function GridView({ results, onUpdate, viewMode = 'grid', onChang
                       </div>
                     </div>
                   </div>
+                </div>
+
+                {/* Save button for individual document */}
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  {saveResults[idx] && (
+                    <div className={`mb-3 p-3 rounded text-sm ${
+                      saveResults[idx].success 
+                        ? 'bg-green-50 text-green-700 border border-green-200' 
+                        : 'bg-red-50 text-red-700 border border-red-200'
+                    }`}>
+                      {saveResults[idx].message}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => handleSaveDocument(idx)}
+                    disabled={savingIndex === idx || !onSaveSingle}
+                    className={`w-full px-4 py-2 rounded transition-colors ${
+                      savingIndex === idx || !onSaveSingle
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                    }`}
+                  >
+                    {savingIndex === idx ? 'Saving...' : 'Save Document'}
+                  </button>
                 </div>
               </div>
 

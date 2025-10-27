@@ -3,8 +3,8 @@ import FileUpload from './components/FileUpload';
 import ResultsTable from './components/ResultsTable';
 import GridView from './components/GridView';
 import { uploadFilesToS3, type UploadProgress } from './services/s3Upload';
-import { processInvoicesWithLLM } from './api/client';
-import type { InvoiceData } from './types/invoice';
+import { processInvoicesWithLLM, saveInvoicesBatch } from './api/client';
+import type { InvoiceData, SaveInvoicesBatchRequest, SaveInvoicesBatchResponse } from './types/invoice';
 
 type ViewMode = 'list' | 'grid';
 
@@ -16,6 +16,9 @@ function App() {
   const [processingProgress, setProcessingProgress] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('list'); // Default to list view
   const [vatRate, setVatRate] = useState<number>(0.18);
+  const [customerId, setCustomerId] = useState<number | ''>('');
+  const [saving, setSaving] = useState(false);
+  const [saveResult, setSaveResult] = useState<SaveInvoicesBatchResponse | null>(null);
 
   const handleFilesSelected = async (files: FileList | null, localPath?: string) => {
     setError(null);
@@ -138,6 +141,123 @@ function App() {
     });
   };
 
+  const averageConfidence = (conf?: Record<string, number>): number | undefined => {
+    if (!conf) return undefined;
+    const vals = Object.values(conf).filter((v) => typeof v === 'number');
+    if (!vals.length) return undefined;
+    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+    return Math.round(avg * 1000) / 1000;
+  };
+
+  const handleSaveSingle = async (index: number) => {
+    if (!customerId) {
+      throw new Error('Customer ID is required');
+    }
+    const r = results[index];
+    if (!r) {
+      throw new Error('Invoice not found');
+    }
+
+    const payload: SaveInvoicesBatchRequest = {
+      customer_id: Number(customerId),
+      invoices: [{
+        supplier_id: (r as any).supplier_id ?? undefined,
+        supplier_name: r.supplier_name,
+        invoice_number: r.invoice_number || r.file_name,
+        invoice_date: (r.invoice_date || '').slice(0, 10),
+        due_date: r.due_date ? r.due_date.slice(0, 10) : null,
+        payment_terms: r.payment_terms ?? null,
+        currency: r.currency || 'ILS',
+        subtotal: Number(r.subtotal ?? 0),
+        vat_amount: Number(r.tax_amount ?? 0),
+        total: Number(r.total ?? 0),
+        doc_name: r.file_name,
+        doc_full_path: r.source_path,
+        document_type: r.document_type || 'invoice',
+        status: r.status || 'pending',
+        ocr_confidence: typeof r.confidence === 'number' ? r.confidence : averageConfidence(r.field_confidence),
+        ocr_language: r.language,
+        ocr_metadata: {
+          field_confidence: r.field_confidence,
+          bounding_boxes: r.bounding_boxes,
+          page_count: r.page_count,
+        },
+        needs_review: false,
+      }]
+    };
+
+    const resp = await saveInvoicesBatch(payload);
+    
+    // Check for errors in response
+    if (resp?.results?.[0]?.error) {
+      throw new Error(resp.results[0].error);
+    }
+    
+    // Merge supplier_id back into this row
+    if (resp?.results?.[0]?.supplier_id != null) {
+      setResults(prev => {
+        const updated = [...prev];
+        (updated[index] as any).supplier_id = resp.results[0].supplier_id;
+        return updated;
+      });
+    }
+  };
+
+  const handleSaveAll = async () => {
+    if (!customerId || results.length === 0) return;
+    setSaving(true);
+    setError(null);
+    setSaveResult(null);
+    try {
+      const payload: SaveInvoicesBatchRequest = {
+        customer_id: Number(customerId),
+        invoices: results.map((r) => ({
+          supplier_id: (r as any).supplier_id ?? undefined,
+          supplier_name: r.supplier_name,
+          invoice_number: r.invoice_number || r.file_name,
+          invoice_date: (r.invoice_date || '').slice(0, 10),
+          due_date: r.due_date ? r.due_date.slice(0, 10) : null,
+          payment_terms: r.payment_terms ?? null,
+          currency: r.currency || 'ILS',
+          subtotal: Number(r.subtotal ?? 0),
+          vat_amount: Number(r.tax_amount ?? 0),
+          total: Number(r.total ?? 0),
+          doc_name: r.file_name,
+          doc_full_path: r.source_path,
+          document_type: r.document_type || 'invoice',
+          status: r.status || 'pending',
+          ocr_confidence: typeof r.confidence === 'number' ? r.confidence : averageConfidence(r.field_confidence),
+          ocr_language: r.language,
+          ocr_metadata: {
+            field_confidence: r.field_confidence,
+            bounding_boxes: r.bounding_boxes,
+            page_count: r.page_count,
+          },
+          needs_review: false,
+        }))
+      };
+
+      const resp = await saveInvoicesBatch(payload);
+      setSaveResult(resp);
+      // Merge supplier_id back into rows
+      if (resp?.results?.length) {
+        setResults(prev => {
+          const updated = [...prev];
+          resp.results.forEach(r => {
+            if (r.supplier_id != null && updated[r.index]) {
+              (updated[r.index] as any).supplier_id = r.supplier_id;
+            }
+          });
+          return updated;
+        });
+      }
+    } catch (e: any) {
+      setError(e?.message || 'Failed to save invoices');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
       <div className="max-w-[1800px] mx-auto">
@@ -175,11 +295,41 @@ function App() {
           </div>
         )}
 
+        {/* Save controls */}
+        {results.length > 0 && (
+          <div className="mt-6 flex items-end gap-3">
+            <div>
+              <label className="block text-sm text-gray-700 mb-1">Customer ID</label>
+              <input
+                type="number"
+                value={customerId}
+                onChange={(e) => setCustomerId(e.target.value === '' ? '' : Number(e.target.value))}
+                className="px-3 py-2 border rounded w-40"
+                placeholder="e.g. 1"
+                min={1}
+              />
+            </div>
+            <button
+              onClick={handleSaveAll}
+              disabled={!customerId || saving}
+              className={`px-4 py-2 rounded text-white ${!customerId || saving ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+              title={!customerId ? 'Enter customer ID' : 'Save all to database'}
+            >
+              {saving ? 'Saving…' : 'Save All'}
+            </button>
+            {saveResult && (
+              <div className="text-sm text-gray-700">
+                Saved: {saveResult.results.filter(r => r.inserted_id).length} • Conflicts: {saveResult.results.filter(r => r.conflict).length} • Errors: {saveResult.results.filter(r => r.error).length}
+              </div>
+            )}
+          </div>
+        )}
+
         {results.length > 0 && (
           viewMode === 'list' ? (
             <ResultsTable results={results} onUpdate={handleUpdateResult} viewMode={viewMode} onChangeView={setViewMode} />
           ) : (
-            <GridView results={results} onUpdate={handleUpdateResult} viewMode={viewMode} onChangeView={setViewMode} />
+            <GridView results={results} onUpdate={handleUpdateResult} viewMode={viewMode} onChangeView={setViewMode} onSaveSingle={handleSaveSingle} />
           )
         )}
       </div>

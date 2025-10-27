@@ -19,6 +19,9 @@ export interface InvoiceData {
   supplier_name?: string;
   invoice_number?: string;
   invoice_date?: string;
+  due_date?: string | null;
+  payment_terms?: string | null;
+  status?: 'pending' | 'approved' | 'exported' | 'rejected';
   currency?: string;
   subtotal?: number;
   tax_amount?: number;
@@ -49,5 +52,47 @@ export interface PresignedUrlResponse {
   url: string;
   fields: Record<string, string>;
   s3_path: string;
+}
+
+export interface SaveInvoicePayload {
+  supplier_id?: number;
+  supplier_name?: string;
+  invoice_number: string;
+  invoice_date: string; // YYYY-MM-DD
+  currency: string;
+  subtotal: number;
+  vat_amount: number;
+  total: number;
+  expense_account_id?: number;
+  deductible_pct?: number;
+  doc_name?: string;
+  doc_full_path?: string;
+  document_type?: string; // invoice | receipt | other
+  status?: string;        // pending | approved | exported | rejected
+  ocr_confidence?: number;
+  ocr_language?: string;
+  ocr_metadata?: any;
+  needs_review?: boolean;
+  due_date?: string | null;
+  payment_terms?: string | null;
+}
+
+export interface SaveInvoicesBatchRequest {
+  customer_id: number;
+  invoices: SaveInvoicePayload[];
+}
+
+export interface SaveInvoicesBatchResult {
+  index: number;
+  invoice_number: string;
+  inserted_id?: number | null;
+  supplier_id?: number | null;
+  supplier_created?: boolean | null;
+  conflict?: boolean;
+  error?: string;
+}
+
+export interface SaveInvoicesBatchResponse {
+  results: SaveInvoicesBatchResult[];
 }
 

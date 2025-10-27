@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ProcessRequest, ProcessResponse, PresignedUrlResponse } from '../types/invoice';
+import type { ProcessRequest, ProcessResponse, PresignedUrlResponse, SaveInvoicesBatchRequest, SaveInvoicesBatchResponse } from '../types/invoice';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -71,6 +71,16 @@ export async function processInvoicesWithLLM(
  */
 export async function healthCheck(): Promise<{ status: string }> {
   const response = await apiClient.get('/healthz');
+  return response.data;
+}
+
+/**
+ * Save invoices in batch
+ */
+export async function saveInvoicesBatch(
+  payload: SaveInvoicesBatchRequest
+): Promise<SaveInvoicesBatchResponse> {
+  const response = await apiClient.post<SaveInvoicesBatchResponse>('/invoices/batch', payload);
   return response.data;
 }
 
