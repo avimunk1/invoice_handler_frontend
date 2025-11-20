@@ -11,39 +11,18 @@ const apiClient = axios.create({
 });
 
 /**
- * Get presigned URL for S3 upload
+ * Upload file directly to Railway backend
  */
-export async function getPresignedUrl(filename: string): Promise<PresignedUrlResponse> {
-  const response = await apiClient.post<PresignedUrlResponse>(
-    '/upload/presigned-url',
-    null,
-    { params: { filename } }
-  );
-  return response.data;
-}
-
-/**
- * Upload file to S3 using presigned URL
- */
-export async function uploadToS3(
-  file: File,
-  presignedData: PresignedUrlResponse
-): Promise<void> {
+export async function uploadFile(file: File): Promise<{ success: boolean; filename: string; path: string; original_filename: string }> {
   const formData = new FormData();
-  
-  // Add all presigned fields
-  Object.entries(presignedData.fields).forEach(([key, value]) => {
-    formData.append(key, value);
-  });
-  
-  // Add the file last
   formData.append('file', file);
   
-  await axios.post(presignedData.url, formData, {
+  const response = await apiClient.post('/upload', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
   });
+  return response.data;
 }
 
 /**

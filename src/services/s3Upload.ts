@@ -1,4 +1,4 @@
-import { getPresignedUrl, uploadToS3 } from '../api/client';
+import { uploadFile } from '../api/client';
 
 export interface UploadProgress {
   filename: string;
@@ -7,14 +7,14 @@ export interface UploadProgress {
 }
 
 /**
- * Upload multiple files to S3 and return their S3 paths
+ * Upload multiple files to Railway backend and return their file paths
  */
 export async function uploadFilesToS3(
   files: FileList,
   onProgress?: (progress: UploadProgress[]) => void
 ): Promise<string[]> {
   const fileArray = Array.from(files);
-  const s3Paths: string[] = [];
+  const filePaths: string[] = [];
   const progress: UploadProgress[] = fileArray.map(f => ({
     filename: f.name,
     status: 'pending',
@@ -30,14 +30,15 @@ export async function uploadFilesToS3(
       progress[i].status = 'uploading';
       onProgress?.(progress);
       
-      // Get presigned URL
-      const presignedData = await getPresignedUrl(file.name);
+      // Upload file directly to backend
+      const uploadResponse = await uploadFile(file);
       
-      // Upload to S3
-      await uploadToS3(file, presignedData);
+      if (!uploadResponse.success) {
+        throw new Error('Upload failed');
+      }
       
-      // Add S3 path to results
-      s3Paths.push(presignedData.s3_path);
+      // Add file path to results
+      filePaths.push(uploadResponse.path);
       
       // Update progress
       progress[i].status = 'completed';
@@ -51,6 +52,6 @@ export async function uploadFilesToS3(
     }
   }
   
-  return s3Paths;
+  return filePaths;
 }
 
