@@ -174,7 +174,7 @@ function BoundingBoxOverlay({
   );
 }
 
-function DocumentPreview({ fileUrl, fileName, boundingBoxes, selectedField, onFieldClick, fieldConfidence }: DocumentPreviewProps) {
+function DocumentPreview({ fileUrl, fileName, boundingBoxes, selectedField, onFieldClick: _onFieldClick, fieldConfidence }: DocumentPreviewProps) {
   const [actualUrl, setActualUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
