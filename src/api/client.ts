@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ProcessRequest, ProcessResponse, PresignedUrlResponse, SaveInvoicesBatchRequest, SaveInvoicesBatchResponse, Customer, InvoiceReportRecord, InvoiceReportFilters, ExportInvoicesRequest } from '../types/invoice';
+import type { ProcessRequest, ProcessResponse, SaveInvoicesBatchRequest, SaveInvoicesBatchResponse, Customer, InvoiceReportRecord, InvoiceReportFilters, ExportInvoicesRequest } from '../types/invoice';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 

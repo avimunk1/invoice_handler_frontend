@@ -48,12 +48,6 @@ export interface ProcessResponse {
   vat_rate?: number;
 }
 
-export interface PresignedUrlResponse {
-  url: string;
-  fields: Record<string, string>;
-  s3_path: string;
-}
-
 export interface SaveInvoicePayload {
   supplier_id?: number;
   supplier_name?: string;
