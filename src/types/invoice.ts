@@ -96,3 +96,36 @@ export interface SaveInvoicesBatchResponse {
   results: SaveInvoicesBatchResult[];
 }
 
+export interface Customer {
+  id: number;
+  name: string;
+}
+
+export interface InvoiceReportRecord {
+  id: number;
+  invoice_date: string;
+  subtotal: number;
+  vat_amount: number;
+  total: number;
+  supplier_name: string;
+  doc_name: string | null;
+  status: string;
+  invoice_number: string;
+  currency: string;
+}
+
+export interface InvoiceReportFilters {
+  customer_id: number;
+  start_date?: string;
+  end_date?: string;
+  status?: string;
+}
+
+export interface ExportInvoicesRequest {
+  customer_id: number;
+  invoice_ids?: number[];
+  start_date?: string;
+  end_date?: string;
+  status?: string;
+}
+
