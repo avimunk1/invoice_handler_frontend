@@ -13,7 +13,15 @@ const apiClient = axios.create({
 /**
  * Upload file directly to Railway backend
  */
-export async function uploadFile(file: File): Promise<{ success: boolean; filename: string; path: string; original_filename: string }> {
+export interface UploadFileResponse {
+  success: boolean;
+  filename: string;
+  path: string;
+  upload_dir: string;
+  original_filename: string;
+}
+
+export async function uploadFile(file: File): Promise<UploadFileResponse> {
   const formData = new FormData();
   formData.append('file', file);
   

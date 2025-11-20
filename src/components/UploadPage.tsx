@@ -31,14 +31,8 @@ export default function UploadPage() {
       let pathToProcess: string;
 
       if (files && files.length > 0) {
-        const s3Paths = await uploadFilesToS3(files, setUploadProgress);
-        
-        if (s3Paths.length > 0) {
-          const firstPath = s3Paths[0];
-          pathToProcess = firstPath.substring(0, firstPath.lastIndexOf('/'));
-        } else {
-          throw new Error('No files were uploaded');
-        }
+        const uploadDir = await uploadFilesToS3(files, setUploadProgress);
+        pathToProcess = uploadDir;
       } else if (localPath) {
         pathToProcess = localPath;
       } else {
@@ -248,11 +242,13 @@ export default function UploadPage() {
           <p className="text-gray-600 mt-2">Upload and process invoices with AI</p>
         </header>
 
-        <FileUpload
-          onFilesSelected={handleFilesSelected}
-          uploading={loading}
-          uploadProgress={uploadProgress}
-        />
+        {/* Show upload area only when not loading and no results */}
+        {!loading && results.length === 0 && (
+          <FileUpload
+            onFilesSelected={handleFilesSelected}
+            uploading={loading}
+          />
+        )}
 
         {error && (
           <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
@@ -260,23 +256,76 @@ export default function UploadPage() {
           </div>
         )}
 
-        {loading && !uploadProgress.length && (
-          <div className="mt-8 text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p className="mt-4 text-gray-600">
-              {processingProgress || 'Processing invoices...'}
-            </p>
+        {/* Loading indicator with stages */}
+        {loading && (
+          <div className="mt-8 bg-white rounded-lg shadow-md p-8">
+            <div className="max-w-2xl mx-auto">
+              <div className="text-center mb-6">
+                <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600"></div>
+              </div>
+              
+              {/* Upload progress */}
+              {uploadProgress.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Uploading Files...</h3>
+                  <div className="space-y-2">
+                    {uploadProgress.map((progress, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                        <span className="text-sm text-gray-700 truncate flex-1">{progress.filename}</span>
+                        <span className={`text-sm font-medium ml-4 ${
+                          progress.status === 'completed' ? 'text-green-600' :
+                          progress.status === 'error' ? 'text-red-600' :
+                          progress.status === 'uploading' ? 'text-blue-600' :
+                          'text-gray-400'
+                        }`}>
+                          {progress.status === 'completed' ? '✓ Uploaded' :
+                           progress.status === 'error' ? '✗ Failed' :
+                           progress.status === 'uploading' ? '⟳ Uploading...' :
+                           '○ Pending'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Processing progress */}
+              {processingProgress && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Processing Invoices...</h3>
+                  <p className="text-center text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    {processingProgress}
+                  </p>
+                  <p className="text-sm text-gray-500 text-center mt-3">
+                    Using Azure Document Intelligence + OpenAI for accurate extraction
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {processingProgress && !loading && (
           <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-center">
-            {processingProgress}
+            ✓ {processingProgress}
           </div>
         )}
 
         {results.length > 0 && (
-          <div className="mt-6 flex items-end gap-3">
+          <div className="mt-6 flex items-end gap-3 flex-wrap">
+            <button
+              onClick={() => {
+                setResults([]);
+                setError(null);
+                setSaveResult(null);
+                setUploadProgress([]);
+                setProcessingProgress(null);
+              }}
+              className="px-4 py-2 rounded bg-gray-600 hover:bg-gray-700 text-white"
+            >
+              ← Upload More Files
+            </button>
+            <div className="flex-grow"></div>
             <div>
               <label className="block text-sm text-gray-700 mb-1">Customer ID</label>
               <input

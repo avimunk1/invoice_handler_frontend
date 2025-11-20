@@ -7,14 +7,14 @@ export interface UploadProgress {
 }
 
 /**
- * Upload multiple files to Railway backend and return their file paths
+ * Upload multiple files to backend and return the upload directory path
  */
 export async function uploadFilesToS3(
   files: FileList,
   onProgress?: (progress: UploadProgress[]) => void
-): Promise<string[]> {
+): Promise<string> {
   const fileArray = Array.from(files);
-  const filePaths: string[] = [];
+  let uploadDir = '';
   const progress: UploadProgress[] = fileArray.map(f => ({
     filename: f.name,
     status: 'pending',
@@ -37,8 +37,10 @@ export async function uploadFilesToS3(
         throw new Error('Upload failed');
       }
       
-      // Add file path to results
-      filePaths.push(uploadResponse.path);
+      // Store upload directory from first file
+      if (i === 0) {
+        uploadDir = uploadResponse.upload_dir;
+      }
       
       // Update progress
       progress[i].status = 'completed';
@@ -52,6 +54,6 @@ export async function uploadFilesToS3(
     }
   }
   
-  return filePaths;
+  return uploadDir;
 }
 
