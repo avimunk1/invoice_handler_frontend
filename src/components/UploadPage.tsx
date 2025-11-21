@@ -25,7 +25,6 @@ export default function UploadPage() {
   const [vatRate, setVatRate] = useState<number>(0.18);
   const [customerId, setCustomerId] = useState<number | ''>('');
   const [saving, setSaving] = useState(false);
-  const [saveResult, setSaveResult] = useState<SaveInvoicesBatchResponse | null>(null);
   
   // Conflict checking
   const [showConflictModal, setShowConflictModal] = useState(false);
@@ -285,7 +284,6 @@ export default function UploadPage() {
     
     setSaving(true);
     setError(null);
-    setSaveResult(null);
 
     try {
       const payload: SaveInvoicesBatchRequest = {
@@ -334,7 +332,6 @@ export default function UploadPage() {
       }
 
       const resp = await saveInvoicesBatch(payload);
-      setSaveResult(resp);
       
       if (resp?.results?.length) {
         const insertCount = resp.results.filter(r => !r.is_update && r.inserted_id).length;
@@ -346,7 +343,6 @@ export default function UploadPage() {
           setResults([]);
           setSelectedFiles([]);
           setSavedInvoiceIds({});
-          setSaveResult(null);
           sessionStorage.removeItem('uploadPage_selection');
           setError(null);
           alert(`Successfully saved! ${insertCount} inserted, ${updateCount} updated.`);
@@ -487,7 +483,6 @@ export default function UploadPage() {
                 onClick={() => {
                   setResults([]);
                   setError(null);
-                  setSaveResult(null);
                   setSavedInvoiceIds({});
                   setNewFiles([]);
                 }}

@@ -82,8 +82,10 @@ export interface SaveInvoicesBatchResult {
   inserted_id?: number | null;
   supplier_id?: number | null;
   supplier_created?: boolean | null;
+  is_update?: boolean;
   conflict?: boolean;
   error?: string;
+  doc_full_path?: string;
 }
 
 export interface SaveInvoicesBatchResponse {
