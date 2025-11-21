@@ -103,3 +103,41 @@ export async function exportInvoices(
   return response.data;
 }
 
+/**
+ * Upload multiple files and process them in one atomic operation
+ */
+export async function uploadAndProcess(files: File[]): Promise<ProcessResponse> {
+  const formData = new FormData();
+  files.forEach(file => {
+    formData.append('files', file);
+  });
+  
+  const response = await apiClient.post<ProcessResponse>('/upload-and-process', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+}
+
+/**
+ * Check for conflicts before saving invoices
+ */
+export interface ConflictDetail {
+  invoice_number: string;
+  type: string;
+  message: string;
+}
+
+export interface ConflictCheckResponse {
+  has_conflicts: boolean;
+  conflicts: ConflictDetail[];
+}
+
+export async function checkInvoiceConflicts(
+  payload: SaveInvoicesBatchRequest
+): Promise<ConflictCheckResponse> {
+  const response = await apiClient.post<ConflictCheckResponse>('/invoices/check-conflicts', payload);
+  return response.data;
+}
+
