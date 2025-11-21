@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import ResultsTable from './ResultsTable';
 import GridView from './GridView';
 import { uploadAndProcess, saveInvoicesBatch, checkInvoiceConflicts, fetchCustomers } from '../api/client';
-import type { InvoiceData, SaveInvoicesBatchRequest, SaveInvoicesBatchResponse, Customer } from '../types/invoice';
+import type { InvoiceData, SaveInvoicesBatchRequest, Customer } from '../types/invoice';
 import type { ConflictCheckResponse } from '../api/client';
 
 type ViewMode = 'list' | 'grid';
