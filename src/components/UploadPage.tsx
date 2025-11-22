@@ -366,11 +366,28 @@ export default function UploadPage() {
   const totalSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
-      <div className="max-w-[1800px] mx-auto">
-        <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">Upload & Process</h1>
-          <p className="text-gray-600 mt-2">Select files, process with AI, and save to database</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4">
+      <div className="max-w-[1920px] mx-auto">
+        <header className="text-center mb-10">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">Upload & Process</h1>
+          <p className="text-lg text-gray-600">Select invoices, process with AI, and save to your database</p>
+          <div className="flex items-center justify-center gap-2 mt-4 text-sm text-gray-500">
+            <span className="inline-flex items-center gap-1">
+              <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip
+
+Rule="evenodd" />
+              </svg>
+              Azure Document Intelligence
+            </span>
+            <span className="text-gray-300">•</span>
+            <span className="inline-flex items-center gap-1">
+              <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              OpenAI GPT-4
+            </span>
+          </div>
         </header>
 
         {/* Hidden file input - always in DOM so ref works */}
@@ -384,61 +401,99 @@ export default function UploadPage() {
         />
 
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-            {error}
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 shadow-sm flex items-start gap-3">
+            <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <span>{error}</span>
           </div>
         )}
 
         {/* File Selection Area - shown when no results */}
         {results.length === 0 && !processing && (
-          <div className="bg-white rounded-lg shadow-md p-8 mb-6">
-            <h2 className="text-2xl font-bold mb-4 text-gray-900">Select Invoices</h2>
+          <div className="card p-8 mb-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">Select Invoices</h2>
+            </div>
 
             {selectedFiles.length === 0 ? (
-              <div className="text-center py-12">
-                <svg className="w-20 h-20 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="text-center py-16 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 hover:bg-gray-100 hover:border-blue-400 transition-all duration-200">
+                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                <p className="text-gray-600 mb-4">No files selected</p>
+                <p className="text-gray-600 mb-2 font-medium">No files selected</p>
+                <p className="text-sm text-gray-500 mb-6">PDF, JPG, or PNG formats supported</p>
                 <button
                   onClick={handleFileSelect}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="btn btn-primary px-8 py-3 text-lg inline-flex items-center gap-2"
                 >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
                   Select Files
                 </button>
               </div>
             ) : (
               <>
-                <div className="mb-4 flex items-center justify-between">
-                  <div className="text-sm text-gray-600">
-                    {selectedFiles.length} file(s) selected • {formatFileSize(totalSize)}
+                <div className="mb-6 flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-200">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100">
+                      <span className="text-blue-700 font-bold text-lg">{selectedFiles.length}</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-blue-900">
+                        {selectedFiles.length} file{selectedFiles.length !== 1 ? 's' : ''} selected
+                      </p>
+                      <p className="text-xs text-blue-700">{formatFileSize(totalSize)} total</p>
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={handleFileSelect}
-                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                      className="btn btn-secondary inline-flex items-center gap-2"
                     >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
                       Add More
                     </button>
                     <button
                       onClick={handleClearAll}
-                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                      className="btn btn-secondary inline-flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
                       Clear All
                     </button>
                   </div>
                 </div>
 
-                <div className="space-y-2 mb-6 max-h-96 overflow-y-auto">
+                <div className="space-y-2 mb-8 max-h-[400px] overflow-y-auto custom-scrollbar">
                   {selectedFiles.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200">
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-900 truncate">{file.name}</div>
-                        <div className="text-xs text-gray-500">{formatFileSize(file.size)} • {file.type || 'Unknown type'}</div>
+                    <div key={index} className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all duration-200 group">
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 group-hover:bg-blue-50 transition-colors">
+                          <svg className="w-5 h-5 text-gray-600 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-gray-900 truncate">{file.name}</div>
+                          <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                            <span className="badge badge-info">{formatFileSize(file.size)}</span>
+                            <span>{file.type || 'Unknown type'}</span>
+                          </div>
+                        </div>
                       </div>
                       <button
                         onClick={() => handleRemoveFile(index)}
-                        className="ml-4 p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                        className="ml-4 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
                         title="Remove file"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -449,16 +504,19 @@ export default function UploadPage() {
                   ))}
                 </div>
 
-                <div className="text-center">
+                <div className="text-center border-t border-gray-200 pt-8">
                   <button
                     onClick={handleStartProcessing}
                     disabled={processing}
-                    className="px-8 py-3 bg-green-600 text-white text-lg font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition-colors shadow-lg"
+                    className="btn btn-success px-12 py-4 text-lg font-semibold inline-flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
                     {processing ? 'Processing...' : 'Start Processing'}
                   </button>
-                  <p className="text-sm text-gray-500 mt-2">
-                    Files will be uploaded and processed with AI
+                  <p className="text-sm text-gray-600 mt-4">
+                    Files will be uploaded and analyzed with AI-powered document intelligence
                   </p>
                 </div>
               </>
@@ -468,17 +526,34 @@ export default function UploadPage() {
 
         {/* Processing Indicator */}
         {processing && (
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mb-4"></div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Processing Invoices...</h3>
-            <p className="text-gray-600">Using Azure Document Intelligence + OpenAI for accurate extraction</p>
+          <div className="card p-12 text-center max-w-2xl mx-auto">
+            <div className="relative inline-flex mb-6">
+              <div className="absolute inset-0 rounded-full bg-blue-400 opacity-25 animate-ping"></div>
+              <div className="spinner w-20 h-20 border-4 border-blue-600"></div>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">Processing Invoices...</h3>
+            <p className="text-gray-600 mb-6">Using Azure Document Intelligence + OpenAI GPT-4 for accurate extraction</p>
+            <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                <span>Analyzing documents</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse delay-75"></div>
+                <span>Extracting data</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse delay-150"></div>
+                <span>Validating results</span>
+              </div>
+            </div>
           </div>
         )}
 
         {/* Results Section */}
         {results.length > 0 && !processing && (
           <>
-            <div className="mb-6 flex items-end gap-3 flex-wrap">
+            <div className="card p-4 mb-6 flex items-center gap-3 flex-wrap">
               <button
                 onClick={() => {
                   setResults([]);
@@ -486,58 +561,95 @@ export default function UploadPage() {
                   setSavedInvoiceIds({});
                   setNewFiles([]);
                 }}
-                className="px-4 py-2 rounded bg-gray-600 hover:bg-gray-700 text-white"
+                className="btn btn-secondary inline-flex items-center gap-2"
               >
-                ← Start Over
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Start Over
               </button>
               <button
                 onClick={handleFileSelect}
-                className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white"
+                className="btn btn-primary inline-flex items-center gap-2"
               >
-                + Add More Files
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Add More Files
               </button>
               <div className="flex-grow"></div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
-                <select
-                  value={customerId}
-                  onChange={(e) => setCustomerId(e.target.value === '' ? '' : Number(e.target.value))}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[200px]"
+              <div className="flex items-end gap-3">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Customer *</label>
+                  <select
+                    value={customerId}
+                    onChange={(e) => setCustomerId(e.target.value === '' ? '' : Number(e.target.value))}
+                    className="select min-w-[220px]"
+                  >
+                    <option value="">Select customer...</option>
+                    {customers.map(customer => (
+                      <option key={customer.id} value={customer.id}>
+                        {customer.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  onClick={handleSaveAll}
+                  disabled={!customerId || saving}
+                  className="btn btn-success px-6 inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={!customerId ? 'Select customer' : 'Save all to database'}
                 >
-                  <option value="">Select customer...</option>
-                  {customers.map(customer => (
-                    <option key={customer.id} value={customer.id}>
-                      {customer.name}
-                    </option>
-                  ))}
-                </select>
+                  {saving ? (
+                    <>
+                      <div className="spinner w-4 h-4 border-2"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                      </svg>
+                      Save All
+                    </>
+                  )}
+                </button>
               </div>
-              <button
-                onClick={handleSaveAll}
-                disabled={!customerId || saving}
-                className={`px-4 py-2 rounded text-white ${!customerId || saving ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700'}`}
-                title={!customerId ? 'Select customer' : 'Save all to database'}
-              >
-                {saving ? 'Saving…' : 'Save All'}
-              </button>
             </div>
 
             {/* Show pending new files to be processed */}
             {newFiles.length > 0 && (
-              <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-blue-900 mb-3">
-                  {newFiles.length} New File(s) Ready to Process
-                </h3>
-                <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
+              <div className="mb-6 card bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-600 text-white">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-blue-900">
+                      {newFiles.length} New File{newFiles.length !== 1 ? 's' : ''} Ready to Process
+                    </h3>
+                    <p className="text-sm text-blue-700">Add these files to your results</p>
+                  </div>
+                </div>
+                <div className="space-y-2 mb-6 max-h-60 overflow-y-auto custom-scrollbar">
                   {newFiles.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-white rounded border border-blue-100">
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-900 truncate">{file.name}</div>
-                        <div className="text-xs text-gray-500">{formatFileSize(file.size)}</div>
+                    <div key={index} className="flex items-center justify-between p-3 bg-white rounded-xl border border-blue-200 shadow-sm">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100">
+                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-gray-900 truncate">{file.name}</div>
+                          <div className="badge badge-info text-xs mt-1">{formatFileSize(file.size)}</div>
+                        </div>
                       </div>
                       <button
                         onClick={() => setNewFiles(prev => prev.filter((_, i) => i !== index))}
-                        className="ml-4 p-1 text-red-600 hover:bg-red-50 rounded"
+                        className="ml-4 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                         title="Remove file"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -547,16 +659,19 @@ export default function UploadPage() {
                     </div>
                   ))}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                   <button
                     onClick={handleProcessNewFiles}
-                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                    className="btn btn-success flex-1 inline-flex items-center justify-center gap-2"
                   >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
                     Process New Files
                   </button>
                   <button
                     onClick={() => setNewFiles([])}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                    className="btn btn-secondary"
                   >
                     Cancel
                   </button>
@@ -574,31 +689,54 @@ export default function UploadPage() {
 
         {/* Conflict Modal */}
         {showConflictModal && conflicts && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Conflicts Detected</h3>
-              <p className="text-gray-600 mb-4">
-                The following conflicts were found. Please resolve them before saving:
-              </p>
-              <div className="space-y-2 mb-6 max-h-96 overflow-y-auto">
-                {conflicts.conflicts.map((conflict, idx) => (
-                  <div key={idx} className="p-3 bg-red-50 border border-red-200 rounded">
-                    <div className="font-medium text-red-900">Invoice: {conflict.invoice_number}</div>
-                    <div className="text-sm text-red-700">Type: {conflict.type}</div>
-                    <div className="text-sm text-red-600">{conflict.message}</div>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden">
+              <div className="bg-gradient-to-r from-red-600 to-red-700 p-6">
+                <div className="flex items-center gap-3 text-white">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-white/20">
+                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
                   </div>
-                ))}
+                  <div>
+                    <h3 className="text-2xl font-bold">Conflicts Detected</h3>
+                    <p className="text-red-100 mt-1">{conflicts.conflicts.length} issue{conflicts.conflicts.length !== 1 ? 's' : ''} need your attention</p>
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => {
-                    setShowConflictModal(false);
-                    setConflicts(null);
-                  }}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-                >
-                  Close
-                </button>
+              <div className="p-6">
+                <p className="text-gray-600 mb-6">
+                  The following conflicts were found. Please resolve them before saving:
+                </p>
+                <div className="space-y-3 mb-6 max-h-96 overflow-y-auto custom-scrollbar pr-2">
+                  {conflicts.conflicts.map((conflict, idx) => (
+                    <div key={idx} className="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl">
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                        <div className="flex-1">
+                          <div className="font-semibold text-red-900">Invoice: {conflict.invoice_number}</div>
+                          <div className="text-sm text-red-700 mt-1">
+                            <span className="badge badge-error mr-2">{conflict.type}</span>
+                            {conflict.message}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => {
+                      setShowConflictModal(false);
+                      setConflicts(null);
+                    }}
+                    className="btn btn-secondary px-6"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
           </div>
