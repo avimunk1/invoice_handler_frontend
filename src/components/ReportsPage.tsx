@@ -129,27 +129,34 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
-      <div className="max-w-[1800px] mx-auto">
-        <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">Invoice Reports</h1>
-          <p className="text-gray-600 mt-2">Filter and export invoice data</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4">
+      <div className="max-w-[1920px] mx-auto">
+        <header className="text-center mb-10">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">Invoice Reports</h1>
+          <p className="text-lg text-gray-600">Filter, analyze, and export your invoice data</p>
         </header>
 
         {/* Filters Section */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Filters</h2>
+        <div className="card p-6 mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">Filters</h2>
+          </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Customer Dropdown */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Customer *
               </label>
               <select
                 value={selectedCustomerId}
                 onChange={(e) => setSelectedCustomerId(e.target.value === '' ? '' : Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="select"
               >
                 <option value="">Select customer...</option>
                 {customers.map(customer => (
@@ -162,27 +169,27 @@ export default function ReportsPage() {
 
             {/* Start Date */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Start Date
               </label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input"
               />
             </div>
 
             {/* End Date */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 End Date
               </label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="input"
               />
             </div>
 
@@ -191,32 +198,47 @@ export default function ReportsPage() {
               <button
                 onClick={handleApplyFilters}
                 disabled={!selectedCustomerId || loading}
-                className={`w-full px-4 py-2 rounded-md text-white font-medium ${
-                  !selectedCustomerId || loading
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700'
-                }`}
+                className="btn btn-primary w-full inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Loading...' : 'Apply Filters'}
+                {loading ? (
+                  <>
+                    <div className="spinner w-5 h-5 border-2"></div>
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    Apply Filters
+                  </>
+                )}
               </button>
             </div>
           </div>
 
           {/* Status Checkboxes */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status
+          <div className="border-t border-gray-200 pt-6">
+            <label className="block text-sm font-semibold text-gray-700 mb-3">
+              Filter by Status (optional)
             </label>
             <div className="flex flex-wrap gap-3">
               {STATUS_OPTIONS.map(status => (
-                <label key={status} className="flex items-center space-x-2 cursor-pointer">
+                <label 
+                  key={status} 
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                    selectedStatuses.has(status)
+                      ? 'border-blue-500 bg-blue-50 text-blue-900'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:bg-gray-50'
+                  }`}
+                >
                   <input
                     type="checkbox"
                     checked={selectedStatuses.has(status)}
                     onChange={() => handleStatusToggle(status)}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
-                  <span className="text-sm text-gray-700 capitalize">{status}</span>
+                  <span className="text-sm font-medium capitalize">{status}</span>
                 </label>
               ))}
             </div>
@@ -225,42 +247,65 @@ export default function ReportsPage() {
 
         {/* Error Display */}
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-            {error}
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 shadow-sm flex items-start gap-3">
+            <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <span>{error}</span>
           </div>
         )}
 
         {/* Results Section */}
         {invoices.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-800">Results</h2>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {invoices.length} invoice{invoices.length !== 1 ? 's' : ''} found
-                    {selectedInvoiceIds.size > 0 && ` • ${selectedInvoiceIds.size} selected`}
-                  </p>
+          <div className="card overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 text-white">
+                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Results</h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      <span className="font-semibold text-blue-700">{invoices.length}</span> invoice{invoices.length !== 1 ? 's' : ''} found
+                      {selectedInvoiceIds.size > 0 && (
+                        <>
+                          <span className="text-gray-400 mx-2">•</span>
+                          <span className="font-semibold text-blue-700">{selectedInvoiceIds.size}</span> selected
+                        </>
+                      )}
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={handleExport}
                   disabled={exporting || invoices.length === 0}
-                  className={`px-6 py-2 rounded-md text-white font-medium ${
-                    exporting || invoices.length === 0
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-green-600 hover:bg-green-700'
-                  }`}
+                  className="btn btn-success inline-flex items-center gap-2 px-6 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {exporting ? 'Exporting...' : 'Export to Excel'}
+                  {exporting ? (
+                    <>
+                      <div className="spinner w-5 h-5 border-2"></div>
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Export to Excel
+                    </>
+                  )}
                 </button>
               </div>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full divide-y divide-gray-200 text-sm">
-                <thead className="bg-gray-50">
+              <table className="table text-sm">
+                <thead className="table-header">
                   <tr>
-                    <th className="px-4 py-3 text-center font-medium text-gray-700 w-16">
+                    <th className="px-6 py-4 text-center font-semibold text-gray-700 w-16">
                       <input
                         type="checkbox"
                         checked={selectedInvoiceIds.size === invoices.length && invoices.length > 0}
@@ -268,21 +313,21 @@ export default function ReportsPage() {
                         className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
                     </th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-700">Invoice Date</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-700">Invoice #</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-700">Supplier Name</th>
-                    <th className="px-4 py-3 text-right font-medium text-gray-700">Amount</th>
-                    <th className="px-4 py-3 text-right font-medium text-gray-700">VAT</th>
-                    <th className="px-4 py-3 text-right font-medium text-gray-700">Total Amount</th>
-                    <th className="px-4 py-3 text-center font-medium text-gray-700">Currency</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-700">Doc Name</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-700">Status</th>
+                    <th className="px-6 py-4 text-left font-semibold text-gray-700">Invoice Date</th>
+                    <th className="px-6 py-4 text-left font-semibold text-gray-700">Invoice #</th>
+                    <th className="px-6 py-4 text-left font-semibold text-gray-700">Supplier Name</th>
+                    <th className="px-6 py-4 text-right font-semibold text-gray-700">Amount</th>
+                    <th className="px-6 py-4 text-right font-semibold text-gray-700">VAT</th>
+                    <th className="px-6 py-4 text-right font-semibold text-gray-700">Total Amount</th>
+                    <th className="px-6 py-4 text-center font-semibold text-gray-700">Currency</th>
+                    <th className="px-6 py-4 text-left font-semibold text-gray-700">Doc Name</th>
+                    <th className="px-6 py-4 text-left font-semibold text-gray-700">Status</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {invoices.map((invoice) => (
-                    <tr key={invoice.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-center">
+                    <tr key={invoice.id} className="table-row">
+                      <td className="px-6 py-4 text-center">
                         <input
                           type="checkbox"
                           checked={selectedInvoiceIds.has(invoice.id)}
@@ -290,35 +335,35 @@ export default function ReportsPage() {
                           className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                         />
                       </td>
-                      <td className="px-4 py-3 text-gray-900">{invoice.invoice_date}</td>
-                      <td className="px-4 py-3 text-gray-900">{invoice.invoice_number}</td>
-                      <td className="px-4 py-3 text-gray-900">{invoice.supplier_name}</td>
-                      <td className="px-4 py-3 text-right text-gray-900 font-mono">
+                      <td className="px-6 py-4 text-gray-900">{invoice.invoice_date}</td>
+                      <td className="px-6 py-4 font-semibold text-blue-600">{invoice.invoice_number}</td>
+                      <td className="px-6 py-4 text-gray-900">{invoice.supplier_name}</td>
+                      <td className="px-6 py-4 text-right text-gray-900 font-mono">
                         {invoice.subtotal.toFixed(2)}
                       </td>
-                      <td className="px-4 py-3 text-right text-gray-900 font-mono">
+                      <td className="px-6 py-4 text-right text-gray-900 font-mono">
                         {invoice.vat_amount.toFixed(2)}
                       </td>
-                      <td className="px-4 py-3 text-right text-gray-900 font-mono font-semibold">
+                      <td className="px-6 py-4 text-right text-gray-900 font-mono font-bold">
                         {invoice.total.toFixed(2)}
                       </td>
-                      <td className="px-4 py-3 text-center text-gray-700 font-medium">
-                        {invoice.currency}
+                      <td className="px-6 py-4 text-center">
+                        <span className="badge badge-info">{invoice.currency}</span>
                       </td>
-                      <td className="px-4 py-3 text-gray-700 text-xs">
+                      <td className="px-6 py-4 text-gray-600 text-sm">
                         <div className="max-w-[200px] truncate" title={invoice.doc_name || ''}>
                           {invoice.doc_name || '-'}
                         </div>
                       </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-block px-2 py-1 text-xs font-medium rounded ${
+                      <td className="px-6 py-4">
+                        <span className={`badge ${
                           invoice.status === 'approved'
-                            ? 'bg-green-100 text-green-800'
+                            ? 'badge-success'
                             : invoice.status === 'exported'
-                            ? 'bg-blue-100 text-blue-800'
+                            ? 'badge-info'
                             : invoice.status === 'rejected'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-yellow-100 text-yellow-800'
+                            ? 'badge-error'
+                            : 'badge-warning'
                         }`}>
                           {invoice.status}
                         </span>
