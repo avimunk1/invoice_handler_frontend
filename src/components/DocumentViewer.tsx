@@ -7,6 +7,9 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url,
 ).toString();
 
+// Get API base URL from environment
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 interface DocumentViewerProps {
   fileUrl: string | null;
   fileName: string;
@@ -29,9 +32,9 @@ export default function DocumentViewer({ fileUrl, fileName, onClose }: DocumentV
       try {
         setLoading(true);
         setError(null);
-        console.log('Fetching file from:', `http://localhost:8000${fileUrl}`);
+        console.log('Fetching file from:', `${API_BASE_URL}${fileUrl}`);
         
-        const response = await fetch(`http://localhost:8000${fileUrl}`);
+        const response = await fetch(`${API_BASE_URL}${fileUrl}`);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch file: ${response.status} ${response.statusText}`);

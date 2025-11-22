@@ -8,6 +8,9 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url,
 ).toString();
 
+// Get API base URL from environment
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 // Error boundary for PDF rendering
 class PDFErrorBoundary extends Component<
   { children: React.ReactNode },
@@ -196,7 +199,7 @@ function DocumentPreview({ fileUrl, fileName, boundingBoxes, selectedField, onFi
         setLoading(true);
         setError(null);
         
-        const response = await fetch(`http://localhost:8000${fileUrl}`);
+        const response = await fetch(`${API_BASE_URL}${fileUrl}`);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch file`);
